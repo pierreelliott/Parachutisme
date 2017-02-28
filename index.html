@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<title>Solar System</title>
+	<style>
+	 body { margin: 0; }
+	 #mainView { width: 100vw; height: 100vh }
+	 #toolbar { color: white; position: absolute; }
+	 #toolbar a { color: lightgrey; }
+	 #toolbar a:hover { text-decoration: none; }
+	</style>
+    </head>
+    <body>
+	<p id="toolbar">
+	    <a href="https://threejs.org/docs/index.html#Manual/Introduction/Creating_a_scene">Documentation</a>
+	    <a href="mailto:guillaum.bouchard@gmail.com">guillaum.bouchard@gmail.com</a>
+	</p>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.js"></script>
+	<script src="js/FlyControls.js"></script>
+	<!--<script src="js/objects.js"></script>-->
+	<script src="js/OrbitControls.js"></script>
+	<script>
+	 // Initialisation of the scene / camera / renderer
+	 var scene = new THREE.Scene();
+	 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+	 
+
+
+	 var renderer = new THREE.WebGLRenderer();
+	 renderer.setSize( window.innerWidth, window.innerHeight );
+	 renderer.shadowMap.enabled = true;
+	 renderer.domElement.id = "mainView";
+	 document.body.appendChild( renderer.domElement );
+
+	 var clock = new THREE.Clock();
+	 var time, delta = clock.getDelta();
+	
+	 var material = new THREE.LineBasicMaterial({ color: 0x22DD33 });	
+	 var box = new THREE.BoxGeometry( 80, 1, 80 );
+	 var cube = new THREE.Mesh( box, material );
+	 scene.add(cube);
+	 cube.position.y = -50;
+	 
+	 var ball = new THREE.SphereGeometry(1, 32, 32);
+	 var paraMaterial = new THREE.MeshBasicMaterial( { color: 0xFF99AA } );
+	 var avionMaterial = new THREE.MeshBasicMaterial( { color: 0xBB9922 } );
+
+	 
+	 var meshAvion = new THREE.Mesh(ball, avionMaterial);
+	 var meshPara1 = new THREE.Mesh(ball, paraMaterial);
+	 //var meshPara2 = new THREE.Mesh(ball, paraMaterial);
+	 
+	 var avion = { obj: meshAvion, posX: -70, posY: 20, vitX: 5, vitY: 0, masse: 4 };
+	 var para1 = { obj: meshPara1, posX: -70, posY: 20, vitX: 5, vitY: 0, masse: 1.5, aX: 0, aY: 0 };
+	 var g = 9.81;
+	 var k = 0.5;
+	 var speed = 5;
+	
+	scene.add(meshAvion);
+	scene.add(meshPara1);
+	place(avion);
+	place(para1);
+	 
+	 /* ################## */
+	 camera.position.z = 60;
+	 camera.rotation.x = -0.2;
+	 
+	 var controls = new THREE.OrbitControls( camera, renderer.domElement );
+	 controls.enableDamping = true;
+	 controls.dampingFactor = 0.25;
+	 controls.enableZoom = true;
+
+	 // This is executed for each frames
+	 function render() {
+	     requestAnimationFrame( render );
+
+	     // Animation code goes here
+		 time = clock.getDelta();
+		 
+		 frottements(para1);
+		 chute(para1, time);
+		 
+		 avion.posX += time*avion.vitX;
+		 
+		 place(avion);
+		 if(para1.posY > -49) place(para1);
+		 
+		 //if(para1.posY < -20) para1.posY = 20;
+		 
+		 console.log(para1.vitY);
+
+		 controls.update( delta );
+	     renderer.render( scene, camera );
+	 }
+
+	 render();
+	 
+	 function frottements(elt) {
+		elt.aY = g -(k * (elt.vitY*elt.vitY) ) / elt.masse;
+		elt.aX = speed -(k * (elt.vitX*elt.vitX) ) / elt.masse;
+	 }
+	 
+	 function place(elt) {
+		elt.obj.position.x = elt.posX;
+		elt.obj.position.y = elt.posY;
+	 }
+	 
+	 function chute(elt, delta) {
+		elt.vitY += delta*elt.aY;
+		elt.posY -= delta*elt.vitY;
+		
+		elt.vitX += delta*elt.aX;
+		elt.posX += delta*elt.vitX;
+	 }
+	</script>
+    </body>
+</html>
